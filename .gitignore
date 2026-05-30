@@ -1,0 +1,39 @@
+# ── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ── Build & Output ────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+*.local
+out/
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── Cache & Editor Files ──────────────────────────────────────────────────────
+.eslintcache
+.tsbuildinfo
+.vite/
+.parcel-cache
+.eslintcache
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── System Files ──────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
