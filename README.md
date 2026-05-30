@@ -72,6 +72,13 @@ Open [http://localhost:5173/login](http://localhost:5173/login) in your browser.
 
 ---
 
+## 📚 References & Developer Documentation
+To deep-dive into endpoints testing strategies or to check the QA test matrices, refer to our comprehensive internal documentation:
+* 📄 **[API Testing Guide](apitesting.md)**: Detailed step-by-step specifications of all REST operations, Celery hooks, auth handshakes, and postman testing guidelines.
+* 📋 **[QA Test Cases Log](testcases.md)**: Fully granular testing matrices, expected assertions, input/output boundary cases, and performance criteria log.
+
+---
+
 ## 📦 Build & Release
 
 Verify type checks and build the production bundle:
