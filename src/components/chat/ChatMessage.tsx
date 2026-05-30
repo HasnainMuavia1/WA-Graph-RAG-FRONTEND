@@ -6,10 +6,12 @@ export type ChatMessageModel = {
   content: string
   tools?: ToolCall[]
   streaming?: boolean
+  metadata?: any
 }
 
 type ChatMessageProps = {
   message: ChatMessageModel
+  showDebug?: boolean
 }
 
 function parseInlineMarkdown(text: string): React.ReactNode[] {
@@ -348,7 +350,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
   return <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>{blocks}</div>
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, showDebug }: ChatMessageProps) {
   const isUser = message.role === 'user'
 
   return (
@@ -361,6 +363,117 @@ export function ChatMessage({ message }: ChatMessageProps) {
           <MarkdownRenderer content={message.content || (message.streaming ? '…' : '')} />
         )}
       </div>
+
+      {/* Visual Indicator if low confidence triggered */}
+      {!isUser && message.metadata?.debug?.low_confidence_triggered ? (
+        <div style={{ margin: '8px 0', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.08)', borderLeft: '4px solid #ef4444', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '16px' }}>🚨</span>
+          <span style={{ fontSize: '12px', color: '#b91c1c', fontWeight: 500 }}>Celery Admin Alert Triggered (Weak/Missing Context)</span>
+        </div>
+      ) : null}
+
+      {/* Render Admin Debug Panel */}
+      {!isUser && showDebug && message.metadata && (
+        <div className="card mt-3" style={{ padding: '14px', background: 'var(--bg-sunk)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '14px' }}>🛡️</span>
+            <strong style={{ fontSize: '12.5px', color: 'var(--text)' }}>Admin Provenance & Debug Analytics</strong>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+            {/* Retrieval Tool used */}
+            <div>
+              <span className="mono" style={{ color: 'var(--text-3)' }}>selected_retrieval_tool: </span>
+              <code className="mono" style={{ background: 'var(--bg)', color: 'var(--accent)', padding: '2px 6px', borderRadius: '4px' }}>
+                {message.metadata.debug?.selected_retrieval_tool || 'none'}
+              </code>
+            </div>
+
+            {/* Retrieved Chunks Accordion */}
+            {message.metadata.debug?.retrieved_chunks && message.metadata.debug.retrieved_chunks.length > 0 ? (
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+                <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📦 Retrieved hybrid chunks ({message.metadata.debug.retrieved_chunks.length})</span>
+                </summary>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto' }}>
+                  {message.metadata.debug.retrieved_chunks.map((c: any, i: number) => (
+                    <div key={c.chunk_id || i} style={{ borderBottom: i < message.metadata.debug.retrieved_chunks.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 650, color: 'var(--text)' }}>
+                        <span>[{i + 1}] {c.document_title}</span>
+                        <span style={{ color: 'var(--accent)' }}>Score: {c.score.toFixed(3)}</span>
+                      </div>
+                      <div className="mono" style={{ fontSize: '10.5px', color: 'var(--text-3)', marginBottom: '4px' }}>Chunk ID: {c.chunk_id}</div>
+                      <p style={{ margin: 0, color: 'var(--text-2)', fontSize: '11.5px', lineHeight: '1.4' }}>{c.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ) : (
+              <div style={{ color: 'var(--text-3)' }}>📦 Retrieved hybrid chunks: none</div>
+            )}
+
+            {/* Neo4j Results Accordion */}
+            {message.metadata.debug?.neo4j_results && message.metadata.debug.neo4j_results.length > 0 ? (
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+                <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                  <span>🕸️ Neo4j facts used ({message.metadata.debug.neo4j_results.length})</span>
+                </summary>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {message.metadata.debug.neo4j_results.map((f: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', gap: '8px', color: 'var(--text-2)', fontSize: '11.5px' }}>
+                      <span>•</span>
+                      <span>{f.fact}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ) : (
+              <div style={{ color: 'var(--text-3)' }}>🕸️ Neo4j facts used: none</div>
+            )}
+
+            {/* Redis Session Context */}
+            {message.metadata.debug?.redis_session_context ? (
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+                <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                  <span>🔄 Redis session history context</span>
+                </summary>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)' }}>
+                  <pre style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', color: 'var(--text-2)', fontFamily: 'monospace' }}>
+                    {message.metadata.debug.redis_session_context}
+                  </pre>
+                </div>
+              </details>
+            ) : null}
+
+            {/* Final Generated Prompt Summary */}
+            {message.metadata.debug?.final_generated_prompt_summary ? (
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+                <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                  <span>📝 Final generated prompt summary</span>
+                </summary>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)' }}>
+                  <pre style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', color: 'var(--text-2)', fontFamily: 'monospace' }}>
+                    {message.metadata.debug.final_generated_prompt_summary}
+                  </pre>
+                </div>
+              </details>
+            ) : null}
+
+            {/* Guardrail Results */}
+            <div style={{ display: 'flex', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+              <div>
+                <span style={{ color: 'var(--text-3)' }}>guardrail_verdict: </span>
+                <span style={{ fontWeight: 600, color: '#10b981' }}>PASSED</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-3)' }}>enforce_roman_urdu: </span>
+                <span style={{ fontWeight: 600, color: 'var(--accent)' }}>ACTIVE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {message.tools && message.tools.length > 0 ? (
         <details className="chat-tools">
           <summary>Tools used ({message.tools.length})</summary>

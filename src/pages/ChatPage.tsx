@@ -21,6 +21,7 @@ export function ChatPage() {
   const [useStreaming, setUseStreaming] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDebug, setShowDebug] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const threadRef = useRef<HTMLDivElement>(null)
 
@@ -66,6 +67,7 @@ export function ChatPage() {
         if (useStreaming) {
           let content = ''
           let tools: ChatMessageModel['tools']
+          let metadata: any = null
 
           for await (const event of streamChat(baseRequest, abortRef.current.signal)) {
             if (event.type === 'session') {
@@ -79,6 +81,9 @@ export function ChatPage() {
               )
             } else if (event.type === 'tools') {
               tools = event.tools
+              if ('metadata' in event) {
+                metadata = (event as any).metadata
+              }
             } else if (event.type === 'error') {
               setError(event.content)
             } else if (event.type === 'end') {
@@ -89,7 +94,7 @@ export function ChatPage() {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? { ...m, content: content || '(No response)', tools, streaming: false }
+                ? { ...m, content: content || '(No response)', tools, metadata, streaming: false }
                 : m,
             ),
           )
@@ -103,6 +108,7 @@ export function ChatPage() {
                     ...m,
                     content: res.message,
                     tools: res.tools_used,
+                    metadata: res.metadata,
                     streaming: false,
                   }
                 : m,
@@ -129,6 +135,26 @@ export function ChatPage() {
         </div>
       ) : null}
 
+      {user?.roles?.includes('admin') ? (
+        <div className="card mb-3" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'rgba(var(--accent-rgb), 0.05)', borderColor: 'rgba(var(--accent-rgb), 0.15)', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>⚙️</span>
+            <div>
+              <strong style={{ fontSize: '13.5px', color: 'var(--text)' }}>Admin Debug Mode</strong>
+              <div style={{ fontSize: '11px', color: 'var(--text-3)' }}>Inspect prompts, retrieved hybrid chunks, Neo4j graph facts, and guardrail verdicts</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`btn btn-sm ${showDebug ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setShowDebug(!showDebug)}
+            style={{ borderRadius: '6px', fontSize: '12px', padding: '6px 12px', whiteSpace: 'nowrap' }}
+          >
+            {showDebug ? 'Disable Debug Overlay' : 'Enable Debug Overlay'}
+          </button>
+        </div>
+      ) : null}
+
       <div className="chat-thread card" ref={threadRef}>
         {messages.length === 0 ? (
           <div className="chat-empty">
@@ -144,7 +170,7 @@ export function ChatPage() {
             </ul>
           </div>
         ) : (
-          messages.map((m) => <ChatMessage key={m.id} message={m} />)
+          messages.map((m) => <ChatMessage key={m.id} message={m} showDebug={showDebug} />)
         )}
       </div>
 

@@ -106,6 +106,7 @@ export type WaMessage = {
   transcribed: boolean
   wa_message_id?: string | null
   created_at: string
+  metadata?: any
 }
 
 export type ConversationsResponse = {

@@ -38,6 +38,7 @@ export function ConversationsPage() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDebug, setShowDebug] = useState(true)
 
   // "New conversation" composer
   const [composing, setComposing] = useState(false)
@@ -264,25 +265,35 @@ export function ConversationsPage() {
           </div>
         ) : (
           <>
-            <header className="conv-thread__head">
+            <header className="conv-thread__head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm conv-back"
+                  onClick={() => setActiveId(null)}
+                  title="Back to conversations"
+                  aria-label="Back to conversations"
+                >
+                  ‹
+                </button>
+                <div className="conv-item__avatar" aria-hidden>
+                  {initials(active.contact_name, active.wa_id)}
+                </div>
+                <div className="conv-thread__meta">
+                  <span className="conv-thread__name">{active.contact_name || active.wa_id}</span>
+                  <span className="conv-thread__sub mono">
+                    +{active.wa_id} · WhatsApp
+                  </span>
+                </div>
+              </div>
               <button
                 type="button"
-                className="btn btn-ghost btn-sm conv-back"
-                onClick={() => setActiveId(null)}
-                title="Back to conversations"
-                aria-label="Back to conversations"
+                className={`btn btn-sm ${showDebug ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setShowDebug(!showDebug)}
+                style={{ borderRadius: '6px', fontSize: '11px', padding: '4px 10px' }}
               >
-                ‹
+                {showDebug ? 'Debug: ON' : 'Debug: OFF'}
               </button>
-              <div className="conv-item__avatar" aria-hidden>
-                {initials(active.contact_name, active.wa_id)}
-              </div>
-              <div className="conv-thread__meta">
-                <span className="conv-thread__name">{active.contact_name || active.wa_id}</span>
-                <span className="conv-thread__sub mono">
-                  +{active.wa_id} · WhatsApp
-                </span>
-              </div>
             </header>
 
             <div className="conv-thread__scroll" ref={threadRef}>
@@ -292,6 +303,50 @@ export function ConversationsPage() {
                 <p className="muted conv-empty-note">No messages in this conversation.</p>
               ) : (
                 messages.map((m) => {
+                  const isSystemAlert = m.content.startsWith("⚠️ [SYSTEM ALERT]")
+                  
+                  if (isSystemAlert) {
+                    return (
+                      <div key={m.id} style={{ display: 'flex', justifyContent: 'center', margin: '14px 0', width: '100%' }}>
+                        <div style={{ maxWidth: '600px', width: '90%', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderLeft: '4px solid #ef4444', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '18px' }}>🚨</span>
+                            <strong style={{ fontSize: '13px', color: '#b91c1c' }}>Administrative Context Alert</strong>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '12px', color: '#7f1d1d', lineHeight: '1.5' }}>
+                            {m.content.replace("⚠️ [SYSTEM ALERT]", "").trim()}
+                          </p>
+                          
+                          {showDebug && m.metadata && (
+                            <div style={{ borderTop: '1px solid rgba(239, 68, 68, 0.15)', paddingTop: '10px', marginTop: '10px' }}>
+                              <details style={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: '6px', background: 'rgba(255,255,255,0.6)' }}>
+                                <summary style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
+                                  Inspect low-confidence search metrics
+                                </summary>
+                                <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: 'var(--text-2)', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                                  <div><span className="mono">selected_retrieval_tool: </span><code className="mono">{m.metadata.debug?.selected_retrieval_tool || 'none'}</code></div>
+                                  {m.metadata.debug?.retrieved_chunks?.length > 0 ? (
+                                    <div>
+                                      <div style={{ fontWeight: 600, marginBottom: '4px' }}>Retrieved hybrid chunks:</div>
+                                      {m.metadata.debug.retrieved_chunks.map((c: any, ci: number) => (
+                                        <div key={ci} style={{ padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginBottom: '4px' }}>
+                                          <span style={{ fontWeight: 650 }}>[{ci + 1}] {c.document_title}</span> (score={c.score.toFixed(3)})
+                                          <div style={{ color: 'var(--text-3)' }}>{c.content.slice(0, 150)}...</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div>Retrieved hybrid chunks: none</div>
+                                  )}
+                                </div>
+                              </details>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
+
                   const outbound = m.direction === 'outbound'
                   const roleLabel =
                     m.sender === 'admin' ? 'You (admin)' : m.sender === 'agent' ? 'Agent' : 'User'
@@ -301,6 +356,7 @@ export function ConversationsPage() {
                       className={`conv-msg ${outbound ? 'out' : 'in'} ${
                         m.sender === 'admin' ? 'admin' : ''
                       }`}
+                      style={{ display: 'flex', flexDirection: 'column' }}
                     >
                       <div className="conv-msg__role">
                         {roleLabel}
@@ -309,6 +365,41 @@ export function ConversationsPage() {
                       <div className="conv-msg__body">
                         {outbound ? m.content : <MarkdownRenderer content={m.content} />}
                       </div>
+
+                      {/* Visual Debug Panel under normal Agent replies */}
+                      {showDebug && m.sender === 'agent' && m.metadata && (
+                        <div style={{ margin: '8px 12px 12px 12px', padding: '10px', background: 'rgba(var(--accent-rgb), 0.03)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '11px', alignSelf: 'stretch' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-2)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span>🛡️</span>
+                            <span>Agent Retrieval Provenance</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div><span style={{ color: 'var(--text-3)' }}>selected_tool: </span><code className="mono">{m.metadata.debug?.selected_retrieval_tool || 'none'}</code></div>
+                            
+                            {m.metadata.provenance?.sources?.length > 0 ? (
+                              <details style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '4px' }}>
+                                <summary style={{ padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>
+                                  View search chunks used ({m.metadata.provenance.sources.length})
+                                </summary>
+                                <div style={{ padding: '6px 8px', borderTop: '1px solid var(--border)', maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  {m.metadata.provenance.sources.map((s: any, si: number) => (
+                                    <div key={si} style={{ borderBottom: si < m.metadata.provenance.sources.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: '4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                        <span>[{si + 1}] {s.source_document_name}</span>
+                                        <span style={{ color: 'var(--accent)' }}>Score: {s.confidence_score.toFixed(3)}</span>
+                                      </div>
+                                      {s.page_section && <div style={{ color: 'var(--text-3)', fontSize: '10px' }}>{s.page_section}</div>}
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            ) : (
+                              <div style={{ color: 'var(--text-3)' }}>Citations/sources: none</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="conv-msg__time">{timeLabel(m.created_at)}</div>
                     </div>
                   )
@@ -316,29 +407,33 @@ export function ConversationsPage() {
               )}
             </div>
 
-            <div className="conv-composer">
-              <textarea
-                className="input conv-composer__input"
-                placeholder="Type a reply… (delivered on WhatsApp)"
-                value={draft}
-                rows={1}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    void handleSend()
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="btn btn-primary conv-composer__send"
-                disabled={sending || !draft.trim()}
-                onClick={() => void handleSend()}
-              >
-                <Icons.Send size={16} />
-                <span>{sending ? 'Sending…' : 'Send'}</span>
-              </button>
+            <div className="conv-composer-container">
+              <div className="conv-composer__textarea-wrapper">
+                <textarea
+                  className="conv-composer__textarea-modern"
+                  placeholder="Type a reply… (delivered on WhatsApp)"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      void handleSend()
+                    }
+                  }}
+                />
+              </div>
+              <div className="conv-composer__footer row">
+                <span className="conv-composer__hint-modern muted">Delivered via Meta WhatsApp Cloud API</span>
+                <button
+                  type="button"
+                  className="conv-composer__send-modern"
+                  disabled={sending || !draft.trim()}
+                  onClick={() => void handleSend()}
+                >
+                  <Icons.Send size={13} />
+                  <span>{sending ? 'Sending…' : 'Send'}</span>
+                </button>
+              </div>
             </div>
           </>
         )}

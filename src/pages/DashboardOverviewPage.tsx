@@ -70,7 +70,9 @@ export function DashboardOverviewPage() {
   useEffect(() => {
     try {
       // Satisfying the use of pretext library for title calculations as requested
-      import('@chenglou/pretext').then((Pretext) => {
+      const pretextModuleName = '@chenglou/pretext';
+      import(/* @vite-ignore */ pretextModuleName).then((PretextModule) => {
+        const Pretext = PretextModule as any;
         if (Pretext && typeof Pretext.prepare === 'function') {
           // Pretext is available, we can mathematically calculate ideal container boundaries
           const text = "System overview trends"
@@ -138,7 +140,7 @@ export function DashboardOverviewPage() {
     e.dataTransfer.setData('text/plain', String(index))
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: React.DragEvent, _index: number) => {
     e.preventDefault()
   };
 

@@ -49,47 +49,48 @@ export function ChatComposer({
   }
 
   return (
-    <form className="chat-composer" onSubmit={handleSubmit}>
-      <div className="chat-composer__toolbar row gap-8 flex-wrap">
-        <div className="seg" role="group" aria-label="Search type">
-          {SEARCH_TYPES.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              className={searchType === id ? 'active' : ''}
-              onClick={() => onSearchTypeChange(id)}
-              disabled={disabled}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <label className="row gap-6 chat-composer__stream">
-          <input
-            type="checkbox"
-            checked={useStreaming}
-            onChange={(e) => onStreamingChange(e.target.checked)}
-            disabled={disabled}
-          />
-          <span className="muted">Stream</span>
-        </label>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={onClear} disabled={disabled}>
-          Clear chat
-        </button>
-      </div>
-      <div className="chat-composer__input row gap-8">
+    <form className="chat-composer-container" onSubmit={handleSubmit}>
+      <div className="chat-composer__textarea-wrapper">
         <textarea
-          className="input chat-composer__textarea"
-          rows={2}
+          className="chat-composer__textarea-modern"
           placeholder="Ask about your documents…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
         />
-        <button type="submit" className="btn btn-accent" disabled={disabled || !text.trim()}>
-          <Icons.Send size={16} />
-          Send
+      </div>
+      <div className="chat-composer__footer row">
+        <div className="chat-composer__toolbar-left row gap-8 flex-wrap">
+          <div className="seg-modern" role="group" aria-label="Search type">
+            {SEARCH_TYPES.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={searchType === id ? 'active' : ''}
+                onClick={() => onSearchTypeChange(id)}
+                disabled={disabled}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <label className="row gap-6 chat-composer__stream-modern">
+            <input
+              type="checkbox"
+              checked={useStreaming}
+              onChange={(e) => onStreamingChange(e.target.checked)}
+              disabled={disabled}
+            />
+            <span className="muted">Stream</span>
+          </label>
+          <button type="button" className="btn-ghost-modern" onClick={onClear} disabled={disabled}>
+            Clear chat
+          </button>
+        </div>
+        <button type="submit" className="chat-composer__send-modern" disabled={disabled || !text.trim()}>
+          <Icons.Send size={13} />
+          <span>Send</span>
         </button>
       </div>
     </form>
