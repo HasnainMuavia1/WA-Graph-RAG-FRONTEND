@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Icons } from '@/components/icons'
+import { Logo } from '@/components/Logo'
 import { useAuth } from '@/context/AuthContext'
 
 type SidebarProps = {
@@ -41,9 +42,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: Side
       <div className="sidebar-brand" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="sidebar-brand-mark" aria-hidden>
-            <Icons.Brand size={16} strokeWidth={2} />
+            <Logo size={34} />
           </div>
-          {!collapsed && <span className="sidebar-brand-text">Uchenab</span>}
+          {!collapsed && (
+            <span className="sidebar-brand-text">
+              <span className="sidebar-brand-text__top">University</span>
+              <span className="sidebar-brand-text__bottom">of Chenab</span>
+            </span>
+          )}
         </div>
         
         {/* Mobile Close Button only inside brand */}

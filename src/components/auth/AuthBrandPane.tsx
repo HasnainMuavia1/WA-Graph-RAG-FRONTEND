@@ -1,11 +1,12 @@
-import { Icons } from '@/components/icons'
+import { Logo } from '@/components/Logo'
 
 export function AuthBrandPane() {
   return (
     <aside className="brand-pane" aria-hidden={false}>
       <div className="brand-pane__logo">
         <div className="brand-pane__mark" aria-hidden>
-          <Icons.Brand size={20} strokeWidth={2} />
+          {/* Brand pane is always dark (#18181b) → force the white logo. */}
+          <Logo size={24} variant="white" />
         </div>
         <span className="brand-pane__name">Uchenab</span>
       </div>

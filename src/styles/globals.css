@@ -320,8 +320,8 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: var(--brand-mark-bg);
-  color: var(--brand-mark-fg);
+  /* Holds the image logo — keep it transparent so the logo sits on its own. */
+  background: transparent;
 }
 
 .brand-pane__name {
@@ -599,17 +599,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   border-radius: 7px;
-  background: var(--brand-mark-bg);
-  color: var(--brand-mark-fg);
+  /* Holds the image logo — transparent so the themed logo sits on the surface. */
+  background: transparent;
 }
 
 .sidebar-brand-text {
-  font-size: 15px;
-  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.12;
   color: var(--text);
+}
+
+.sidebar-brand-text__top {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.sidebar-brand-text__bottom {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .sidebar-nav {
@@ -1005,7 +1020,11 @@ table.tbl tbody tr:last-child td {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  /* Full-bleed: cancel the .chat-page horizontal gutter so the banner spans the
+     whole content width, while its own padding keeps the text aligned with the
+     thread/composer content below. */
+  margin: 0 calc(-1 * var(--space-6));
+  padding: 12px var(--space-6);
   background: var(--bg-sunk);
   border-bottom: 1px solid var(--border);
   gap: 16px;
@@ -1046,7 +1065,9 @@ table.tbl tbody tr:last-child td {
   flex-direction: column;
   height: calc(100vh - var(--header-h));
   width: 100%;
-  padding: 0;
+  /* Horizontal gutter so the thread + composer don't hug the sidebar/edge;
+     bottom padding keeps the composer + session line off the screen edge. */
+  padding: 0 var(--space-6) var(--space-4);
   gap: 0;
 }
 
@@ -1054,7 +1075,9 @@ table.tbl tbody tr:last-child td {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-4);
+  /* Vertical padding only — horizontal gutter comes from .chat-page so the
+     messages stay aligned with the composer below. */
+  padding: var(--space-4) 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
