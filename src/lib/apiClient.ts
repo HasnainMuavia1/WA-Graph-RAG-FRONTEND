@@ -62,7 +62,58 @@ export async function refreshSessionTokens(): Promise<boolean> {
   return refreshInFlight
 }
 
+type CacheEntry = {
+  data: any
+  timestamp: number
+}
+
+const cacheMap = new Map<string, CacheEntry>()
+const CACHE_TTL = 15000 // 15 seconds stale limit
+
+export function clearApiCache() {
+  cacheMap.clear()
+}
+
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { auth = false, headers, _retry = false, ...rest } = options
+  
+  // Stale-while-revalidate for specific dashboard/overview endpoints
+  const isGet = !rest.method || rest.method.toUpperCase() === 'GET'
+  const cacheable = isGet && (
+    path.startsWith('/api/v1/dashboard/stats') ||
+    path.startsWith('/api/v1/health') ||
+    path.startsWith('/api/v1/documents')
+  )
+
+  if (cacheable) {
+    const cached = cacheMap.get(path)
+    const now = Date.now()
+    if (cached) {
+      const age = now - cached.timestamp
+      if (age < CACHE_TTL) {
+        return cached.data as T
+      }
+      // Revalidate in the background
+      void (async () => {
+        try {
+          const fresh = await performFetch<T>(path, options)
+          cacheMap.set(path, { data: fresh, timestamp: Date.now() })
+        } catch {
+          // ignore background fetch failures
+        }
+      })()
+      return cached.data as T
+    }
+  }
+
+  const data = await performFetch<T>(path, options)
+  if (cacheable) {
+    cacheMap.set(path, { data, timestamp: Date.now() })
+  }
+  return data
+}
+
+async function performFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { auth = false, headers, _retry = false, ...rest } = options
   const hdrs = new Headers(headers)
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
+import Plotly from 'plotly.js-dist-min'
 import { Link } from 'react-router-dom'
 import { GripVertical } from 'lucide-react'
 import { Icons } from '@/components/icons'
@@ -50,54 +51,225 @@ export function DashboardOverviewPage() {
     admin_messages: true
   })
 
-  // Tooltip interaction state for the SVG chart
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
-  const svgRef = useRef<SVGSVGElement | null>(null)
+  // Plotly chart refs
+  const plotlyTrendsRef = useRef<HTMLDivElement | null>(null)
+  const plotlyResponseRef = useRef<HTMLDivElement | null>(null)
+  const [themeTrigger, setThemeTrigger] = useState(0)
+
+  // Listen to global theme changes to update Plotly colors instantly
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          setThemeTrigger(prev => prev + 1)
+        }
+      })
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  // Render and update Plotly Trends Chart
+  useEffect(() => {
+    if (!stats || !stats.trends || stats.trends.length === 0 || !plotlyTrendsRef.current) return
+
+    const xData = stats.trends.map(t => {
+      try {
+        const d = new Date(t.date)
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+      } catch {
+        return t.date
+      }
+    })
+
+    const data: any[] = []
+
+    if (visibleSeries.chats_started) {
+      data.push({
+        x: xData,
+        y: stats.trends.map(t => t.chats_started),
+        name: 'New Chats',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+          color: '#0ea5e9',
+          shape: 'spline',
+          width: 3
+        },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(14, 165, 233, 0.08)',
+        marker: { size: 6 }
+      })
+    }
+
+    if (visibleSeries.user_messages) {
+      data.push({
+        x: xData,
+        y: stats.trends.map(t => t.user_messages),
+        name: 'User Inbound',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+          color: '#10b981',
+          shape: 'spline',
+          width: 3
+        },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(16, 185, 129, 0.08)',
+        marker: { size: 6 }
+      })
+    }
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'
+    const zeroLineColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'
+
+    const layout = {
+      margin: { l: 30, r: 15, t: 15, b: 30 },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      showlegend: false,
+      xaxis: {
+        showgrid: false,
+        linecolor: gridColor,
+        tickcolor: gridColor,
+        tickfont: { family: 'Geist, sans-serif', size: 10, color: isDark ? '#a1a1aa' : '#71717a' }
+      },
+      yaxis: {
+        gridcolor: gridColor,
+        zerolinecolor: zeroLineColor,
+        linecolor: 'rgba(0,0,0,0)',
+        tickfont: { family: 'Geist Mono, monospace', size: 10, color: isDark ? '#a1a1aa' : '#71717a' }
+      },
+      hovermode: 'closest' as const
+    }
+
+    const config = {
+      responsive: true,
+      displayModeBar: false
+    }
+
+    void Plotly.newPlot(plotlyTrendsRef.current, data, layout, config)
+  }, [stats, visibleSeries.chats_started, visibleSeries.user_messages, themeTrigger])
+
+  // Render and update Plotly Response Chart
+  useEffect(() => {
+    if (!stats || !stats.trends || stats.trends.length === 0 || !plotlyResponseRef.current) return
+
+    const xData = stats.trends.map(t => {
+      try {
+        const d = new Date(t.date)
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+      } catch {
+        return t.date
+      }
+    })
+
+    const data: any[] = []
+
+    if (visibleSeries.agent_messages) {
+      data.push({
+        x: xData,
+        y: stats.trends.map(t => t.agent_messages),
+        name: 'Agent Bot',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+          color: '#8b5cf6',
+          shape: 'spline',
+          width: 3
+        },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(139, 92, 246, 0.08)',
+        marker: { size: 6 }
+      })
+    }
+
+    if (visibleSeries.admin_messages) {
+      data.push({
+        x: xData,
+        y: stats.trends.map(t => t.admin_messages),
+        name: 'Admin Staff',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+          color: '#f59e0b',
+          shape: 'spline',
+          width: 3
+        },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(245, 158, 11, 0.08)',
+        marker: { size: 6 }
+      })
+    }
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'
+    const zeroLineColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'
+
+    const layout = {
+      margin: { l: 30, r: 15, t: 15, b: 30 },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      showlegend: false,
+      xaxis: {
+        showgrid: false,
+        linecolor: gridColor,
+        tickcolor: gridColor,
+        tickfont: { family: 'Geist, sans-serif', size: 10, color: isDark ? '#a1a1aa' : '#71717a' }
+      },
+      yaxis: {
+        gridcolor: gridColor,
+        zerolinecolor: zeroLineColor,
+        linecolor: 'rgba(0,0,0,0)',
+        tickfont: { family: 'Geist Mono, monospace', size: 10, color: isDark ? '#a1a1aa' : '#71717a' }
+      },
+      hovermode: 'closest' as const
+    }
+
+    const config = {
+      responsive: true,
+      displayModeBar: false
+    }
+
+    void Plotly.newPlot(plotlyResponseRef.current, data, layout, config)
+  }, [stats, visibleSeries.agent_messages, visibleSeries.admin_messages, themeTrigger])
 
   // Drag and Drop State for movable containers
   const [layout, setLayout] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('uchenab-dashboard-layout')
-      return saved ? JSON.parse(saved) : ['trends', 'services', 'documents']
+      const parsed = saved ? JSON.parse(saved) : null
+      if (parsed && parsed.includes('trends') && !parsed.includes('responseTrends')) {
+        const idx = parsed.indexOf('trends')
+        const next = [...parsed]
+        next.splice(idx + 1, 0, 'responseTrends')
+        return next
+      }
+      return parsed || ['trends', 'responseTrends', 'services', 'documents']
     } catch {
-      return ['trends', 'services', 'documents']
+      return ['trends', 'responseTrends', 'services', 'documents']
     }
   })
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-
-  // pretext title measurement safety checks
-  useEffect(() => {
-    try {
-      // Satisfying the use of pretext library for title calculations as requested
-      const pretextModuleName = '@chenglou/pretext';
-      import(/* @vite-ignore */ pretextModuleName).then((PretextModule) => {
-        const Pretext = PretextModule as any;
-        if (Pretext && typeof Pretext.prepare === 'function') {
-          // Pretext is available, we can mathematically calculate ideal container boundaries
-          const text = "System overview trends"
-          const font = Pretext.prepare({
-            text,
-            fontSize: 13,
-            fontFamily: 'Geist'
-          })
-          if (font) {
-            const width = Pretext.layout(font, { width: 500 })
-            console.debug("[Pretext] Measured dashboard header width:", width)
-          }
-        }
-      }).catch(err => {
-        console.debug("Pretext measurement skipped: run-time environment fallback active.", err)
-      })
-    } catch (e) {
-      // Fallback silently if pretext is not loaded or has API shifts
-    }
-  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
+      // Clear SWR cache on manual user reload click
+      try {
+        const { clearApiCache } = await import('@/lib/apiClient')
+        clearApiCache()
+      } catch {
+        // fail-safe
+      }
+
       const [h, docs, s] = await Promise.all([
         getHealth(),
         getDocuments({ limit: 8 }),
@@ -161,89 +333,7 @@ export function DashboardOverviewPage() {
     setDraggedIndex(null)
   };
 
-  // SVG Chart interactions
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!stats || !stats.trends || stats.trends.length === 0 || !svgRef.current) return
-    
-    const rect = svgRef.current.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left
-    
-    // ViewBox is 700x240, map mouse coordinate back to viewBox X
-    const viewBoxX = (mouseX / rect.width) * 700
-    
-    // Grid bounds: start at 50, step width is 620 / 6
-    const chartWidth = 620
-    const paddingLeft = 50
-    const step = chartWidth / 6
-
-    let closestIndex = 0
-    let minDiff = Infinity
-    for (let i = 0; i < stats.trends.length; i++) {
-      const x = paddingLeft + i * step
-      const diff = Math.abs(viewBoxX - x)
-      if (diff < minDiff) {
-        minDiff = diff
-        closestIndex = i
-      }
-    }
-    
-    setHoveredIndex(closestIndex)
-    
-    // Calculate tooltip coordinates
-    const dayX = paddingLeft + closestIndex * step
-    const screenX = (dayX / 700) * rect.width
-    setTooltipPos({
-      x: screenX,
-      y: e.clientY - rect.top - 130
-    })
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredIndex(null)
-  };
-
   const totalChunks = documents.reduce((n, d) => n + (d.chunk_count ?? 0), 0)
-
-  // Chart coordinate math
-  const maxValue = stats?.trends && stats.trends.length > 0 
-    ? Math.max(...stats.trends.flatMap(t => [
-        visibleSeries.chats_started ? t.chats_started : 0,
-        visibleSeries.user_messages ? t.user_messages : 0,
-        visibleSeries.agent_messages ? t.agent_messages : 0,
-        visibleSeries.admin_messages ? t.admin_messages : 0
-      ]), 5)
-    : 5;
-
-  const chartWidth = 620
-  const chartHeight = 190
-  const paddingLeft = 50
-  const paddingTop = 20
-  const step = chartWidth / 6
-
-  const getLinePath = (key: 'chats_started' | 'user_messages' | 'agent_messages' | 'admin_messages') => {
-    if (!stats || !stats.trends || stats.trends.length === 0) return ''
-    const points = stats.trends.map((t, idx) => {
-      const x = paddingLeft + idx * step
-      const val = t[key]
-      const y = (paddingTop + chartHeight) - (val / maxValue) * chartHeight
-      return `${x},${y}`
-    })
-    return `M ${points.join(' L ')}`
-  }
-
-  const getAreaPath = (key: 'chats_started' | 'user_messages' | 'agent_messages' | 'admin_messages') => {
-    if (!stats || !stats.trends || stats.trends.length === 0) return ''
-    const points = stats.trends.map((t, idx) => {
-      const x = paddingLeft + idx * step
-      const val = t[key]
-      const y = (paddingTop + chartHeight) - (val / maxValue) * chartHeight
-      return `${x},${y}`
-    })
-    const firstX = paddingLeft
-    const lastX = paddingLeft + (stats.trends.length - 1) * step
-    const baseline = paddingTop + chartHeight
-    return `M ${firstX},${baseline} L ${points.join(' L ')} L ${lastX},${baseline} Z`
-  }
 
   // Render components according to layout order
   const renderPanel = (panelName: string, idx: number) => {
@@ -254,9 +344,9 @@ export function DashboardOverviewPage() {
         return (
           <section 
             key="trends"
-            className="card card-pad" 
+            className="card card-pad shadow-md hover:shadow-lg transition-shadow duration-300" 
             style={{ 
-              gridColumn: 'span 2', 
+              gridColumn: 'span 1', 
               position: 'relative',
               opacity: isDraggingThis ? 0.4 : 1,
               transition: 'opacity 0.2s ease',
@@ -264,9 +354,10 @@ export function DashboardOverviewPage() {
             }}
           >
             {/* Card Header with drag handles */}
-            <div className="row-between mb-3" style={{ userSelect: 'none' }}>
+            <div className="row-between mb-3" style={{ userSelect: 'none', flexWrap: 'wrap', gap: '8px' }}>
               <div className="row gap-8">
                 <div 
+                  className="hover:text-sky-500 transition-colors"
                   style={{ cursor: 'grab', color: 'var(--text-3)' }}
                   draggable
                   onDragStart={(e) => handleDragStart(e, idx)}
@@ -277,18 +368,18 @@ export function DashboardOverviewPage() {
                 >
                   <GripVertical size={16} />
                 </div>
-                <span className="h-card" style={{ fontWeight: 600 }}>Message & Chat Activity Trends</span>
+                <span className="h-card" style={{ fontWeight: 600 }}>Inbound Traffic Trends</span>
               </div>
               
               {/* Interactive Legend with toggle filters */}
               <div className="row gap-12 flex-wrap">
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm transition-all duration-200"
                   style={{
                     height: 22,
-                    fontSize: 11,
-                    padding: '2px 8px',
+                    fontSize: 10,
+                    padding: '2px 10px',
                     borderRadius: 99,
                     color: visibleSeries.chats_started ? 'var(--text)' : 'var(--text-4)',
                     background: visibleSeries.chats_started ? 'var(--accent-2)' : 'transparent',
@@ -296,16 +387,16 @@ export function DashboardOverviewPage() {
                   }}
                   onClick={() => setVisibleSeries(prev => ({ ...prev, chats_started: !prev.chats_started }))}
                 >
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.chats_started.stroke, marginRight: 6 }}></span>
-                  Chats Started
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.chats_started.stroke, marginRight: 4 }}></span>
+                  New Chats
                 </button>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm transition-all duration-200"
                   style={{
                     height: 22,
-                    fontSize: 11,
-                    padding: '2px 8px',
+                    fontSize: 10,
+                    padding: '2px 10px',
                     borderRadius: 99,
                     color: visibleSeries.user_messages ? 'var(--text)' : 'var(--text-4)',
                     background: visibleSeries.user_messages ? 'var(--success-bg)' : 'transparent',
@@ -313,42 +404,8 @@ export function DashboardOverviewPage() {
                   }}
                   onClick={() => setVisibleSeries(prev => ({ ...prev, user_messages: !prev.user_messages }))}
                 >
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.user_messages.stroke, marginRight: 6 }}></span>
-                  User Messages
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{
-                    height: 22,
-                    fontSize: 11,
-                    padding: '2px 8px',
-                    borderRadius: 99,
-                    color: visibleSeries.agent_messages ? 'var(--text)' : 'var(--text-4)',
-                    background: visibleSeries.agent_messages ? 'var(--violet-bg)' : 'transparent',
-                    border: `1px solid ${visibleSeries.agent_messages ? 'var(--violet)' : 'var(--border)'}`
-                  }}
-                  onClick={() => setVisibleSeries(prev => ({ ...prev, agent_messages: !prev.agent_messages }))}
-                >
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.agent_messages.stroke, marginRight: 6 }}></span>
-                  Agent Replies
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{
-                    height: 22,
-                    fontSize: 11,
-                    padding: '2px 8px',
-                    borderRadius: 99,
-                    color: visibleSeries.admin_messages ? 'var(--text)' : 'var(--text-4)',
-                    background: visibleSeries.admin_messages ? 'rgba(245, 158, 11, 0.1)' : 'transparent',
-                    border: `1px solid ${SERIES_COLORS.admin_messages.stroke}`
-                  }}
-                  onClick={() => setVisibleSeries(prev => ({ ...prev, admin_messages: !prev.admin_messages }))}
-                >
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.admin_messages.stroke, marginRight: 6 }}></span>
-                  Admin Replies
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.user_messages.stroke, marginRight: 4 }}></span>
+                  User Inbound
                 </button>
               </div>
             </div>
@@ -359,246 +416,94 @@ export function DashboardOverviewPage() {
               </div>
             ) : !stats || stats.trends.length === 0 ? (
               <div className="empty" style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p>No chat data logged yet. Active WhatsApp exchanges populate here.</p>
+                <p>No chats logged yet.</p>
               </div>
             ) : (
-              <div style={{ position: 'relative', width: '100%', height: 240 }}>
-                {/* SVG Graph */}
-                <svg
-                  ref={svgRef}
-                  viewBox="0 0 700 240"
-                  width="100%"
-                  height="100%"
-                  style={{ overflow: 'visible', pointerEvents: 'auto' }}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
+              <div ref={plotlyTrendsRef} style={{ width: '100%', height: 240 }} />
+            )}
+          </section>
+        )
+
+      case 'responseTrends':
+        return (
+          <section 
+            key="responseTrends"
+            className="card card-pad shadow-md hover:shadow-lg transition-shadow duration-300" 
+            style={{ 
+              gridColumn: 'span 1', 
+              position: 'relative',
+              opacity: isDraggingThis ? 0.4 : 1,
+              transition: 'opacity 0.2s ease',
+              border: isDraggingThis ? '2px dashed var(--accent)' : undefined
+            }}
+          >
+            {/* Card Header with drag handles */}
+            <div className="row-between mb-3" style={{ userSelect: 'none', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="row gap-8">
+                <div 
+                  className="hover:text-sky-500 transition-colors"
+                  style={{ cursor: 'grab', color: 'var(--text-3)' }}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  title="Drag to reposition panel"
                 >
-                  <defs>
-                    <linearGradient id={SERIES_COLORS.chats_started.gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={SERIES_COLORS.chats_started.stroke} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={SERIES_COLORS.chats_started.stroke} stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id={SERIES_COLORS.user_messages.gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={SERIES_COLORS.user_messages.stroke} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={SERIES_COLORS.user_messages.stroke} stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id={SERIES_COLORS.agent_messages.gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={SERIES_COLORS.agent_messages.stroke} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={SERIES_COLORS.agent_messages.stroke} stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id={SERIES_COLORS.admin_messages.gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={SERIES_COLORS.admin_messages.stroke} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={SERIES_COLORS.admin_messages.stroke} stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Horizontal Grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((p, idx) => {
-                    const y = (paddingTop + chartHeight) - p * chartHeight
-                    const labelVal = Math.round(p * maxValue)
-                    return (
-                      <g key={idx}>
-                        <text
-                          x={paddingLeft - 10}
-                          y={y + 4}
-                          fill="var(--text-3)"
-                          fontSize={10}
-                          fontFamily="var(--font-mono)"
-                          textAnchor="end"
-                        >
-                          {labelVal}
-                        </text>
-                        <line
-                          x1={paddingLeft}
-                          y1={y}
-                          x2={paddingLeft + chartWidth}
-                          y2={y}
-                          stroke="var(--border)"
-                          strokeWidth={1}
-                          strokeDasharray="3 3"
-                        />
-                      </g>
-                    )
-                  })}
-
-                  {/* X Axis Labels */}
-                  {stats.trends.map((t, idx) => {
-                    const x = paddingLeft + idx * step
-                    // Convert date YYYY-MM-DD to cleaner format (e.g. May 30)
-                    let formattedDate = t.date
-                    try {
-                      const d = new Date(t.date)
-                      formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
-                    } catch {
-                      // fallback
-                    }
-                    return (
-                      <text
-                        key={idx}
-                        x={x}
-                        y={paddingTop + chartHeight + 18}
-                        fill="var(--text-3)"
-                        fontSize={10.5}
-                        textAnchor="middle"
-                      >
-                        {formattedDate}
-                      </text>
-                    )
-                  })}
-
-                  {/* Area fills */}
-                  {visibleSeries.chats_started && (
-                    <path d={getAreaPath('chats_started')} fill={`url(#${SERIES_COLORS.chats_started.gradientId})`} />
-                  )}
-                  {visibleSeries.user_messages && (
-                    <path d={getAreaPath('user_messages')} fill={`url(#${SERIES_COLORS.user_messages.gradientId})`} />
-                  )}
-                  {visibleSeries.agent_messages && (
-                    <path d={getAreaPath('agent_messages')} fill={`url(#${SERIES_COLORS.agent_messages.gradientId})`} />
-                  )}
-                  {visibleSeries.admin_messages && (
-                    <path d={getAreaPath('admin_messages')} fill={`url(#${SERIES_COLORS.admin_messages.gradientId})`} />
-                  )}
-
-                  {/* Line strokes */}
-                  {visibleSeries.chats_started && (
-                    <path
-                      d={getLinePath('chats_started')}
-                      fill="none"
-                      stroke={SERIES_COLORS.chats_started.stroke}
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                    />
-                  )}
-                  {visibleSeries.user_messages && (
-                    <path
-                      d={getLinePath('user_messages')}
-                      fill="none"
-                      stroke={SERIES_COLORS.user_messages.stroke}
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                    />
-                  )}
-                  {visibleSeries.agent_messages && (
-                    <path
-                      d={getLinePath('agent_messages')}
-                      fill="none"
-                      stroke={SERIES_COLORS.agent_messages.stroke}
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                    />
-                  )}
-                  {visibleSeries.admin_messages && (
-                    <path
-                      d={getLinePath('admin_messages')}
-                      fill="none"
-                      stroke={SERIES_COLORS.admin_messages.stroke}
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                    />
-                  )}
-
-                  {/* Vertical Hover Bar */}
-                  {hoveredIndex !== null && (
-                    <line
-                      x1={paddingLeft + hoveredIndex * step}
-                      y1={paddingTop}
-                      x2={paddingLeft + hoveredIndex * step}
-                      y2={paddingTop + chartHeight}
-                      stroke="var(--accent)"
-                      strokeWidth={1.5}
-                      strokeDasharray="2 2"
-                    />
-                  )}
-
-                  {/* Hover nodes (little circles on the points) */}
-                  {hoveredIndex !== null && stats.trends[hoveredIndex] && (
-                    <>
-                      {Object.keys(SERIES_COLORS).map((key) => {
-                        const seriesKey = key as keyof typeof SERIES_COLORS
-                        if (!visibleSeries[seriesKey]) return null
-                        const val = stats.trends[hoveredIndex!][seriesKey]
-                        const x = paddingLeft + hoveredIndex! * step
-                        const y = (paddingTop + chartHeight) - (val / maxValue) * chartHeight
-                        return (
-                          <g key={key}>
-                            <circle
-                              cx={x}
-                              cy={y}
-                              r={6}
-                              fill="var(--bg-elev)"
-                              stroke={SERIES_COLORS[seriesKey].stroke}
-                              strokeWidth={2}
-                            />
-                            <circle
-                              cx={x}
-                              cy={y}
-                              r={2}
-                              fill={SERIES_COLORS[seriesKey].stroke}
-                            />
-                          </g>
-                        )
-                      })}
-                    </>
-                  )}
-                </svg>
-
-                {/* Glassmorphism Interactive Tooltip Popup */}
-                {hoveredIndex !== null && stats.trends[hoveredIndex] && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: Math.min(tooltipPos.x, svgRef.current ? svgRef.current.clientWidth - 170 : 500),
-                      top: 10,
-                      background: 'rgba(27, 27, 27, 0.85)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid var(--border-strong)',
-                      borderRadius: '8px',
-                      padding: '8px 12px',
-                      boxShadow: 'var(--shadow-md)',
-                      pointerEvents: 'none',
-                      zIndex: 100,
-                      width: '160px',
-                      fontSize: '11px',
-                      color: '#fff'
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4, marginBottom: 4, textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.05em' }}>
-                      {(() => {
-                        try {
-                          return new Date(stats.trends[hoveredIndex!].date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
-                        } catch {
-                          return stats.trends[hoveredIndex!].date
-                        }
-                      })()}
-                    </div>
-                    {visibleSeries.chats_started && (
-                      <div className="row-between" style={{ color: '#e0e0e0', margin: '2px 0' }}>
-                        <span>Chats started:</span>
-                        <strong style={{ color: SERIES_COLORS.chats_started.stroke }}>{stats.trends[hoveredIndex!].chats_started}</strong>
-                      </div>
-                    )}
-                    {visibleSeries.user_messages && (
-                      <div className="row-between" style={{ color: '#e0e0e0', margin: '2px 0' }}>
-                        <span>User messages:</span>
-                        <strong style={{ color: SERIES_COLORS.user_messages.stroke }}>{stats.trends[hoveredIndex!].user_messages}</strong>
-                      </div>
-                    )}
-                    {visibleSeries.agent_messages && (
-                      <div className="row-between" style={{ color: '#e0e0e0', margin: '2px 0' }}>
-                        <span>Agent replies:</span>
-                        <strong style={{ color: SERIES_COLORS.agent_messages.stroke }}>{stats.trends[hoveredIndex!].agent_messages}</strong>
-                      </div>
-                    )}
-                    {visibleSeries.admin_messages && (
-                      <div className="row-between" style={{ color: '#e0e0e0', margin: '2px 0' }}>
-                        <span>Admin replies:</span>
-                        <strong style={{ color: SERIES_COLORS.admin_messages.stroke }}>{stats.trends[hoveredIndex!].admin_messages}</strong>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  <GripVertical size={16} />
+                </div>
+                <span className="h-card" style={{ fontWeight: 600 }}>Response Resolution Trends</span>
               </div>
+              
+              {/* Interactive Legend with toggle filters */}
+              <div className="row gap-12 flex-wrap">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm transition-all duration-200"
+                  style={{
+                    height: 22,
+                    fontSize: 10,
+                    padding: '2px 10px',
+                    borderRadius: 99,
+                    color: visibleSeries.agent_messages ? 'var(--text)' : 'var(--text-4)',
+                    background: visibleSeries.agent_messages ? 'var(--violet-bg)' : 'transparent',
+                    border: `1px solid ${visibleSeries.agent_messages ? 'var(--violet)' : 'var(--border)'}`
+                  }}
+                  onClick={() => setVisibleSeries(prev => ({ ...prev, agent_messages: !prev.agent_messages }))}
+                >
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.agent_messages.stroke, marginRight: 4 }}></span>
+                  Agent Bot
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm transition-all duration-200"
+                  style={{
+                    height: 22,
+                    fontSize: 10,
+                    padding: '2px 10px',
+                    borderRadius: 99,
+                    color: visibleSeries.admin_messages ? 'var(--text)' : 'var(--text-4)',
+                    background: visibleSeries.admin_messages ? 'rgba(245, 158, 11, 0.1)' : 'transparent',
+                    border: `1px solid ${SERIES_COLORS.admin_messages.stroke}`
+                  }}
+                  onClick={() => setVisibleSeries(prev => ({ ...prev, admin_messages: !prev.admin_messages }))}
+                >
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: SERIES_COLORS.admin_messages.stroke, marginRight: 4 }}></span>
+                  Admin Staff
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="empty" style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p>Loading analytics…</p>
+              </div>
+            ) : !stats || stats.trends.length === 0 ? (
+              <div className="empty" style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p>No replies logged yet.</p>
+              </div>
+            ) : (
+              <div ref={plotlyResponseRef} style={{ width: '100%', height: 240 }} />
             )}
           </section>
         )
@@ -614,7 +519,7 @@ export function DashboardOverviewPage() {
               border: isDraggingThis ? '2px dashed var(--accent)' : undefined
             }}
           >
-            <div className="row-between mb-3" style={{ userSelect: 'none' }}>
+            <div className="row-between mb-3" style={{ userSelect: 'none', flexWrap: 'wrap', gap: '8px' }}>
               <div className="row gap-8">
                 <div 
                   style={{ cursor: 'grab', color: 'var(--text-3)' }}
@@ -698,7 +603,7 @@ export function DashboardOverviewPage() {
               border: isDraggingThis ? '2px dashed var(--accent)' : undefined
             }}
           >
-            <div className="row-between mb-3" style={{ userSelect: 'none' }}>
+            <div className="row-between mb-3" style={{ userSelect: 'none', flexWrap: 'wrap', gap: '8px' }}>
               <div className="row gap-8">
                 <div 
                   style={{ cursor: 'grab', color: 'var(--text-3)' }}
@@ -759,7 +664,7 @@ export function DashboardOverviewPage() {
 
   return (
     <div className="page">
-      <div className="row-between mb-3">
+      <div className="row-between mb-3" style={{ flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <p className="muted">System overview</p>
         </div>

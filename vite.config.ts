@@ -20,6 +20,28 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      cssCodeSplit: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react')) {
+                return 'vendor-core';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('@chenglou/pretext')) {
+                return 'vendor-pretext';
+              }
+              return 'vendor';
+            }
+          },
+        },
+      },
+    },
   }
 })
 

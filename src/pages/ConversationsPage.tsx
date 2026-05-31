@@ -308,28 +308,28 @@ export function ConversationsPage() {
                   if (isSystemAlert) {
                     return (
                       <div key={m.id} style={{ display: 'flex', justifyContent: 'center', margin: '14px 0', width: '100%' }}>
-                        <div style={{ maxWidth: '600px', width: '90%', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderLeft: '4px solid #ef4444', borderRadius: '8px' }}>
+                        <div style={{ maxWidth: '600px', width: '90%', padding: '12px 16px', background: 'var(--danger-bg)', border: '1px solid var(--danger)', borderLeft: '4px solid var(--danger)', borderRadius: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                             <span style={{ fontSize: '18px' }}>🚨</span>
-                            <strong style={{ fontSize: '13px', color: '#b91c1c' }}>Administrative Context Alert</strong>
+                            <strong style={{ fontSize: '13px', color: 'var(--danger)' }}>Administrative Context Alert</strong>
                           </div>
-                          <p style={{ margin: 0, fontSize: '12px', color: '#7f1d1d', lineHeight: '1.5' }}>
+                          <p style={{ margin: 0, fontSize: '12px', color: 'var(--text)', lineHeight: '1.5' }}>
                             {m.content.replace("⚠️ [SYSTEM ALERT]", "").trim()}
                           </p>
                           
                           {showDebug && m.metadata && (
-                            <div style={{ borderTop: '1px solid rgba(239, 68, 68, 0.15)', paddingTop: '10px', marginTop: '10px' }}>
-                              <details style={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: '6px', background: 'rgba(255,255,255,0.6)' }}>
+                            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '10px' }}>
+                              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-elev)' }}>
                                 <summary style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                                   Inspect low-confidence search metrics
                                 </summary>
-                                <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: 'var(--text-2)', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                                <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: 'var(--text-2)', borderTop: '1px solid var(--border)' }}>
                                   <div><span className="mono">selected_retrieval_tool: </span><code className="mono">{m.metadata.debug?.selected_retrieval_tool || 'none'}</code></div>
                                   {m.metadata.debug?.retrieved_chunks?.length > 0 ? (
                                     <div>
                                       <div style={{ fontWeight: 600, marginBottom: '4px' }}>Retrieved hybrid chunks:</div>
                                       {m.metadata.debug.retrieved_chunks.map((c: any, ci: number) => (
-                                        <div key={ci} style={{ padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px', marginBottom: '4px' }}>
+                                        <div key={ci} style={{ padding: '4px 6px', background: 'var(--bg-sunk)', borderRadius: '4px', marginBottom: '4px' }}>
                                           <span style={{ fontWeight: 650 }}>[{ci + 1}] {c.document_title}</span> (score={c.score.toFixed(3)})
                                           <div style={{ color: 'var(--text-3)' }}>{c.content.slice(0, 150)}...</div>
                                         </div>
@@ -368,33 +368,33 @@ export function ConversationsPage() {
 
                       {/* Visual Debug Panel under normal Agent replies */}
                       {showDebug && m.sender === 'agent' && m.metadata && (
-                        <div style={{ margin: '8px 12px 12px 12px', padding: '10px', background: 'rgba(var(--accent-rgb), 0.03)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '11px', alignSelf: 'stretch' }}>
-                          <div style={{ fontWeight: 600, color: 'var(--text-2)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ margin: '8px 12px 12px 12px', padding: '10px', background: 'rgba(0, 0, 0, 0.25)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '6px', fontSize: '11px', alignSelf: 'stretch', color: '#ffffff' }}>
+                          <div style={{ fontWeight: 650, color: '#ffffff', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <span>🛡️</span>
                             <span>Agent Retrieval Provenance</span>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <div><span style={{ color: 'var(--text-3)' }}>selected_tool: </span><code className="mono">{m.metadata.debug?.selected_retrieval_tool || 'none'}</code></div>
+                            <div><span style={{ color: 'rgba(255, 255, 255, 0.85)' }}>selected_tool: </span><code className="mono" style={{ background: 'rgba(255, 255, 255, 0.15)', padding: '2px 4px', borderRadius: '3px', color: '#ffffff' }}>{m.metadata.debug?.selected_retrieval_tool || 'none'}</code></div>
                             
                             {m.metadata.provenance?.sources?.length > 0 ? (
-                              <details style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '4px' }}>
-                                <summary style={{ padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>
+                              <details style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '4px' }}>
+                                <summary style={{ padding: '4px 8px', cursor: 'pointer', fontWeight: 600, color: '#ffffff' }}>
                                   View search chunks used ({m.metadata.provenance.sources.length})
                                 </summary>
-                                <div style={{ padding: '6px 8px', borderTop: '1px solid var(--border)', maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div style={{ padding: '6px 8px', borderTop: '1px solid rgba(255, 255, 255, 0.15)', maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                   {m.metadata.provenance.sources.map((s: any, si: number) => (
-                                    <div key={si} style={{ borderBottom: si < m.metadata.provenance.sources.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: '4px' }}>
+                                    <div key={si} style={{ borderBottom: si < m.metadata.provenance.sources.length - 1 ? '1px solid rgba(255, 255, 255, 0.12)' : 'none', paddingBottom: '4px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-                                        <span>[{si + 1}] {s.source_document_name}</span>
-                                        <span style={{ color: 'var(--accent)' }}>Score: {s.confidence_score.toFixed(3)}</span>
+                                        <span style={{ color: '#ffffff' }}>[{si + 1}] {s.source_document_name}</span>
+                                        <span style={{ color: 'rgba(255, 255, 255, 0.95)' }}>Score: {s.confidence_score.toFixed(3)}</span>
                                       </div>
-                                      {s.page_section && <div style={{ color: 'var(--text-3)', fontSize: '10px' }}>{s.page_section}</div>}
+                                      {s.page_section && <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '10px' }}>{s.page_section}</div>}
                                     </div>
                                   ))}
                                 </div>
                               </details>
                             ) : (
-                              <div style={{ color: 'var(--text-3)' }}>Citations/sources: none</div>
+                              <div style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Citations/sources: none</div>
                             )}
                           </div>
                         </div>

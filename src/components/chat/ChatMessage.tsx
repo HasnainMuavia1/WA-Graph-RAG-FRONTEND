@@ -383,15 +383,15 @@ export function ChatMessage({ message, showDebug }: ChatMessageProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
             {/* Retrieval Tool used */}
             <div>
-              <span className="mono" style={{ color: 'var(--text-3)' }}>selected_retrieval_tool: </span>
-              <code className="mono" style={{ background: 'var(--bg)', color: 'var(--accent)', padding: '2px 6px', borderRadius: '4px' }}>
+              <span className="mono" style={{ color: 'var(--text-2)' }}>selected_retrieval_tool: </span>
+              <code className="mono" style={{ background: 'var(--bg-elev)', color: 'var(--accent)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>
                 {message.metadata.debug?.selected_retrieval_tool || 'none'}
               </code>
             </div>
 
             {/* Retrieved Chunks Accordion */}
             {message.metadata.debug?.retrieved_chunks && message.metadata.debug.retrieved_chunks.length > 0 ? (
-              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-elev)' }}>
                 <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>📦 Retrieved hybrid chunks ({message.metadata.debug.retrieved_chunks.length})</span>
                 </summary>
@@ -402,19 +402,19 @@ export function ChatMessage({ message, showDebug }: ChatMessageProps) {
                         <span>[{i + 1}] {c.document_title}</span>
                         <span style={{ color: 'var(--accent)' }}>Score: {c.score.toFixed(3)}</span>
                       </div>
-                      <div className="mono" style={{ fontSize: '10.5px', color: 'var(--text-3)', marginBottom: '4px' }}>Chunk ID: {c.chunk_id}</div>
+                      <div className="mono" style={{ fontSize: '10.5px', color: 'var(--text-2)', marginBottom: '4px' }}>Chunk ID: {c.chunk_id}</div>
                       <p style={{ margin: 0, color: 'var(--text-2)', fontSize: '11.5px', lineHeight: '1.4' }}>{c.content}</p>
                     </div>
                   ))}
                 </div>
               </details>
             ) : (
-              <div style={{ color: 'var(--text-3)' }}>📦 Retrieved hybrid chunks: none</div>
+              <div style={{ color: 'var(--text-2)' }}>📦 Retrieved hybrid chunks: none</div>
             )}
 
-            {/* Neo4j Results Accordion */}
+            {/* Neo4j Facts Accordion */}
             {message.metadata.debug?.neo4j_results && message.metadata.debug.neo4j_results.length > 0 ? (
-              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-elev)' }}>
                 <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                   <span>🕸️ Neo4j facts used ({message.metadata.debug.neo4j_results.length})</span>
                 </summary>
@@ -428,12 +428,12 @@ export function ChatMessage({ message, showDebug }: ChatMessageProps) {
                 </div>
               </details>
             ) : (
-              <div style={{ color: 'var(--text-3)' }}>🕸️ Neo4j facts used: none</div>
+              <div style={{ color: 'var(--text-2)' }}>🕸️ Neo4j facts used: none</div>
             )}
 
             {/* Redis Session Context */}
             {message.metadata.debug?.redis_session_context ? (
-              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-elev)' }}>
                 <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                   <span>🔄 Redis session history context</span>
                 </summary>
@@ -447,7 +447,7 @@ export function ChatMessage({ message, showDebug }: ChatMessageProps) {
 
             {/* Final Generated Prompt Summary */}
             {message.metadata.debug?.final_generated_prompt_summary ? (
-              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg)' }}>
+              <details style={{ border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-elev)' }}>
                 <summary style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer' }}>
                   <span>📝 Final generated prompt summary</span>
                 </summary>
@@ -462,11 +462,11 @@ export function ChatMessage({ message, showDebug }: ChatMessageProps) {
             {/* Guardrail Results */}
             <div style={{ display: 'flex', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
               <div>
-                <span style={{ color: 'var(--text-3)' }}>guardrail_verdict: </span>
+                <span style={{ color: 'var(--text-2)' }}>guardrail_verdict: </span>
                 <span style={{ fontWeight: 600, color: '#10b981' }}>PASSED</span>
               </div>
               <div>
-                <span style={{ color: 'var(--text-3)' }}>enforce_roman_urdu: </span>
+                <span style={{ color: 'var(--text-2)' }}>enforce_roman_urdu: </span>
                 <span style={{ fontWeight: 600, color: 'var(--accent)' }}>ACTIVE</span>
               </div>
             </div>

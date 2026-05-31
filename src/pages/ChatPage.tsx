@@ -136,19 +136,21 @@ export function ChatPage() {
       ) : null}
 
       {user?.roles?.includes('admin') ? (
-        <div className="card mb-3" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'rgba(var(--accent-rgb), 0.05)', borderColor: 'rgba(var(--accent-rgb), 0.15)', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>⚙️</span>
+        <div className="admin-debug-banner">
+          <div className="admin-debug-banner__info">
+            <span className="admin-debug-banner__icon">⚙️</span>
             <div>
-              <strong style={{ fontSize: '13.5px', color: 'var(--text)' }}>Admin Debug Mode</strong>
-              <div style={{ fontSize: '11px', color: 'var(--text-3)' }}>Inspect prompts, retrieved hybrid chunks, Neo4j graph facts, and guardrail verdicts</div>
+              <strong className="admin-debug-banner__title">Admin Debug Mode</strong>
+              <div className="admin-debug-banner__subtitle">
+                Inspect prompts, retrieved hybrid chunks, Neo4j graph facts, and verdicts
+              </div>
             </div>
           </div>
           <button
             type="button"
-            className={`btn btn-sm ${showDebug ? 'btn-primary' : 'btn-ghost'}`}
+            className={`btn btn-sm ${showDebug ? 'btn-accent' : 'btn-ghost'}`}
             onClick={() => setShowDebug(!showDebug)}
-            style={{ borderRadius: '6px', fontSize: '12px', padding: '6px 12px', whiteSpace: 'nowrap' }}
+            style={{ borderRadius: '6px', fontSize: '12px', padding: '4px 12px', whiteSpace: 'nowrap' }}
           >
             {showDebug ? 'Disable Debug Overlay' : 'Enable Debug Overlay'}
           </button>

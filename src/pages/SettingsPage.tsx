@@ -300,245 +300,255 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="page">
-      <section className="card card-pad mb-3">
-        <div className="row-between mb-3">
-          <span className="h-card">Account</span>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => void refreshUser()}
-          >
-            <Icons.Refresh size={14} />
-            Refresh profile
-          </button>
-        </div>
-        {user ? (
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start', paddingTop: 8 }}>
-            {/* Left side: Profile image uploader */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: 100 }}>
-              <div 
-                className="avatar" 
-                style={{ 
-                  width: 80, 
-                  height: 80, 
-                  fontSize: 28, 
-                  fontWeight: 600, 
-                  background: 'var(--accent-2)', 
-                  color: 'var(--accent)',
-                  border: '1px solid var(--border)',
-                  overflow: 'hidden',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '50%'
-                }}
+    <div className="page" style={{ minHeight: 'calc(100vh - var(--header-h))', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', flex: 1, width: '100%' }}>
+        
+        {/* Column 1: Account Profile */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <section className="card card-pad" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div className="row-between mb-3">
+              <span className="h-card">Account</span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => void refreshUser()}
               >
-                {user.id ? (
-                  <img 
-                    src={`/api/v1/users/${user.id}/avatar?v=${avatarVersion}`} 
-                    alt={user.full_name || user.email} 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover',
-                      display: imageLoaded ? 'block' : 'none'
-                    }}
-                    onLoad={() => setImageLoaded(true)}
-                    onError={() => setImageLoaded(false)}
-                  />
-                ) : null}
-                {!imageLoaded && (
-                  <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {(user.full_name || user.email).charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <label 
-                className="btn btn-ghost btn-sm" 
-                style={{ 
-                  cursor: 'pointer', 
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  height: 24
-                }}
-              >
-                {uploadingAvatar ? 'Processing…' : 'Change Photo'}
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  style={{ display: 'none' }} 
-                  onChange={handleAvatarChange} 
-                  disabled={uploadingAvatar}
-                />
-              </label>
-              {avatarMsg && (
-                <span style={{ fontSize: 10.5, fontWeight: 500, color: 'var(--accent)', textAlign: 'center', lineHeight: 1.2 }}>
-                  {avatarMsg}
-                </span>
-              )}
+                <Icons.Refresh size={14} />
+                Refresh profile
+              </button>
             </div>
-
-            {/* Right side: standard user data list */}
-            <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <form onSubmit={handleUpdateName} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Email</label>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', padding: '2px 0' }}>{user.email}</div>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label htmlFor="full-name-input" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Name</label>
-                  <input
-                    id="full-name-input"
-                    type="text"
-                    className="input"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your name"
-                    required
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      background: 'var(--bg)',
+            {user ? (
+              <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start', paddingTop: 8, flex: 1 }}>
+                {/* Left side: Profile image uploader */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: 100 }}>
+                  <div 
+                    className="avatar" 
+                    style={{ 
+                      width: 80, 
+                      height: 80, 
+                      fontSize: 28, 
+                      fontWeight: 600, 
+                      background: 'var(--accent-2)', 
+                      color: 'var(--accent)',
                       border: '1px solid var(--border)',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: 'var(--text)',
-                      width: '100%',
-                      outline: 'none'
+                      overflow: 'hidden',
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%'
                     }}
-                  />
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button 
-                    type="submit" 
-                    className="btn btn-accent btn-sm"
-                    disabled={updatingName || fullName === user.full_name || !fullName.trim()}
-                    style={{ alignSelf: 'flex-start', padding: '4px 12px', height: 28, fontSize: 12 }}
                   >
-                    {updatingName ? 'Saving…' : 'Save Name'}
-                  </button>
-                  {nameMsg && (
-                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)' }}>
-                      {nameMsg}
+                    {user.id ? (
+                      <img 
+                        src={`/api/v1/users/${user.id}/avatar?v=${avatarVersion}`} 
+                        alt={user.full_name || user.email} 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover',
+                          display: imageLoaded ? 'block' : 'none'
+                        }}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageLoaded(false)}
+                      />
+                    ) : null}
+                    {!imageLoaded && (
+                      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {(user.full_name || user.email).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <label 
+                    className="btn btn-ghost btn-sm" 
+                    style={{ 
+                      cursor: 'pointer', 
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      height: 24
+                    }}
+                  >
+                    {uploadingAvatar ? 'Processing…' : 'Change Photo'}
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }} 
+                      onChange={handleAvatarChange} 
+                      disabled={uploadingAvatar}
+                    />
+                  </label>
+                  {avatarMsg && (
+                    <span style={{ fontSize: 10.5, fontWeight: 500, color: 'var(--accent)', textAlign: 'center', lineHeight: 1.2 }}>
+                      {avatarMsg}
                     </span>
                   )}
                 </div>
-              </form>
 
-              <dl className="settings-dl" style={{ margin: 0, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-                <div>
-                  <dt>Verified</dt>
-                  <dd>
-                    <StatusBadge
-                      label={user.is_verified ? 'Yes' : 'No'}
-                      tone={user.is_verified ? 'green' : 'amber'}
-                    />
-                  </dd>
+                {/* Right side: standard user data list */}
+                <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <form onSubmit={handleUpdateName} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Email</label>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', padding: '2px 0' }}>{user.email}</div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label htmlFor="full-name-input" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Name</label>
+                      <input
+                        id="full-name-input"
+                        type="text"
+                        className="input"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Enter your name"
+                        required
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          background: 'var(--bg)',
+                          border: '1px solid var(--border)',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: 'var(--text)',
+                          width: '100%',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button 
+                        type="submit" 
+                        className="btn btn-accent btn-sm"
+                        disabled={updatingName || fullName === user.full_name || !fullName.trim()}
+                        style={{ alignSelf: 'flex-start', padding: '4px 12px', height: 28, fontSize: 12 }}
+                      >
+                        {updatingName ? 'Saving…' : 'Save Name'}
+                      </button>
+                      {nameMsg && (
+                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)' }}>
+                          {nameMsg}
+                        </span>
+                      )}
+                    </div>
+                  </form>
+
+                  <dl className="settings-dl" style={{ margin: 0, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                    <div>
+                      <dt>Verified</dt>
+                      <dd>
+                        <StatusBadge
+                          label={user.is_verified ? 'Yes' : 'No'}
+                          tone={user.is_verified ? 'green' : 'amber'}
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Roles</dt>
+                      <dd style={{ fontWeight: 500 }}>{user.roles?.length ? user.roles.join(', ') : '—'}</dd>
+                    </div>
+                    {user.last_login_at ? (
+                      <div>
+                        <dt>Last login</dt>
+                        <dd className="mono muted">{formatDate(user.last_login_at)}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
                 </div>
-                <div>
-                  <dt>Roles</dt>
-                  <dd style={{ fontWeight: 500 }}>{user.roles?.length ? user.roles.join(', ') : '—'}</dd>
-                </div>
-                {user.last_login_at ? (
-                  <div>
-                    <dt>Last login</dt>
-                    <dd className="mono muted">{formatDate(user.last_login_at)}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </div>
-          </div>
-        ) : (
-          <p className="empty">Loading profile…</p>
-        )}
-      </section>
+              </div>
+            ) : (
+              <p className="empty">Loading profile…</p>
+            )}
+          </section>
+        </div>
 
-      <section className="card card-pad mb-3">
-        <span className="h-card">Session</span>
-        <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
-          Calls <code className="mono">POST /api/v1/auth/refresh-token</code> to rotate tokens.
-          Expired access tokens are refreshed automatically on API calls.
-        </p>
-        <button
-          type="button"
-          className="btn btn-accent btn-sm"
-          disabled={sessionLoading}
-          onClick={() => void onRefreshSession()}
-        >
-          {sessionLoading ? 'Refreshing…' : 'Refresh session'}
-        </button>
-        {sessionMsg ? (
-          <p style={{ marginTop: 12, fontSize: 13 }}>{sessionMsg}</p>
-        ) : null}
-      </section>
-
-      {!user?.is_verified ? (
-        <section className="card card-pad mb-3">
-          <span className="h-card">Email verification</span>
-          <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
-            Resend a verification token via{' '}
-            <code className="mono">POST /api/v1/auth/resend-verification</code>.
-          </p>
-          <button
-            type="button"
-            className="btn btn-sm"
-            disabled={verifyLoading}
-            onClick={() => void onResendVerification()}
-          >
-            {verifyLoading ? 'Sending…' : 'Resend verification'}
-          </button>
-          {verifyMsg ? <p style={{ marginTop: 12, fontSize: 13 }}>{verifyMsg}</p> : null}
-          {verifyToken ? (
-            <p className="mono muted" style={{ marginTop: 8, fontSize: 12, wordBreak: 'break-all' }}>
-              Dev token: {verifyToken}
+        {/* Column 2: Session & Security stack */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <section className="card card-pad">
+            <span className="h-card">Session</span>
+            <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
+              Calls <code className="mono">POST /api/v1/auth/refresh-token</code> to rotate tokens.
+              Expired access tokens are refreshed automatically on API calls.
             </p>
-          ) : null}
-        </section>
-      ) : null}
+            <button
+              type="button"
+              className="btn btn-accent btn-sm"
+              disabled={sessionLoading}
+              onClick={() => void onRefreshSession()}
+            >
+              {sessionLoading ? 'Refreshing…' : 'Refresh session'}
+            </button>
+            {sessionMsg ? (
+              <p style={{ marginTop: 12, fontSize: 13 }}>{sessionMsg}</p>
+            ) : null}
+          </section>
 
-      <section className="card card-pad">
-        <span className="h-card">Change password</span>
-        <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
-          Uses <code className="mono">POST /api/v1/auth/change-password</code>. You will be signed out
-          after a successful change.
-        </p>
-        <form className="creds__form" style={{ maxWidth: 400 }} onSubmit={handleChangePassword}>
-          {pwError ? (
-            <div className="creds__alert" role="alert">
-              {pwError}
-            </div>
+          {!user?.is_verified ? (
+            <section className="card card-pad">
+              <span className="h-card">Email verification</span>
+              <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
+                Resend a verification token via{' '}
+                <code className="mono">POST /api/v1/auth/resend-verification</code>.
+              </p>
+              <button
+                type="button"
+                className="btn btn-sm"
+                disabled={verifyLoading}
+                onClick={() => void onResendVerification()}
+              >
+                {verifyLoading ? 'Sending…' : 'Resend verification'}
+              </button>
+              {verifyMsg ? <p style={{ marginTop: 12, fontSize: 13 }}>{verifyMsg}</p> : null}
+              {verifyToken ? (
+                <p className="mono muted" style={{ marginTop: 8, fontSize: 12, wordBreak: 'break-all' }}>
+                  Dev token: {verifyToken}
+                </p>
+              ) : null}
+            </section>
           ) : null}
-          {pwSuccess ? (
-            <div className="card card-pad" style={{ fontSize: 13 }}>
-              {pwSuccess}
-            </div>
-          ) : null}
-          <PasswordField
-            label="Current password"
-            required
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-          <PasswordField
-            label="New password"
-            required
-            minLength={8}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            autoComplete="new-password"
-          />
-          <button type="submit" className="submit-btn" disabled={pwSubmitting}>
-            {pwSubmitting ? 'Updating…' : 'Update password'}
-          </button>
-        </form>
-      </section>
+
+          <section className="card card-pad" style={{ flex: 1, minHeight: 0 }}>
+            <span className="h-card">Change password</span>
+            <p className="muted" style={{ margin: '8px 0 12px', fontSize: 13 }}>
+              Uses <code className="mono">POST /api/v1/auth/change-password</code>. You will be signed out
+              after a successful change.
+            </p>
+            <form className="creds__form" style={{ maxWidth: '100%' }} onSubmit={handleChangePassword}>
+              {pwError ? (
+                <div className="creds__alert" role="alert">
+                  {pwError}
+                </div>
+              ) : null}
+              {pwSuccess ? (
+                <div className="card card-pad" style={{ fontSize: 13 }}>
+                  {pwSuccess}
+                </div>
+              ) : null}
+              <PasswordField
+                label="Current password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+              <PasswordField
+                label="New password"
+                required
+                minLength={8}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <button type="submit" className="submit-btn" disabled={pwSubmitting}>
+                {pwSubmitting ? 'Updating…' : 'Update password'}
+              </button>
+            </form>
+          </section>
+        </div>
+
+      </div>
 
       {selectedImageSrc && (
         <div 
