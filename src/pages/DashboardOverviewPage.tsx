@@ -296,20 +296,21 @@ export function DashboardOverviewPage() {
     setIngesting(true)
     setIngestMsg(null)
     try {
-      const res = await triggerIngest()
-      if (res && res.status === 'queued') {
-        setIngestMsg(
-          'Asynchronous ingestion is now running in the background. Chunks are being extracted, embedded via OpenAI, and structural entities indexed in Neo4j. Refresh in a few moments to see the new metrics!'
-        )
-      } else {
-        setIngestMsg(res.message || 'Ingestion task successfully scheduled!')
-      }
-    } catch (e) {
-      setIngestMsg(e instanceof Error ? e.message : 'Ingestion failed')
+      await triggerIngest()
+      setIngestMsg('Ingestion is now running in the background. Refresh in a few moments to see new metrics.')
+    } catch {
+      setIngestMsg('Ingestion failed. Please try again.')
     } finally {
       setIngesting(false)
     }
   }
+
+  // Auto-dismiss ingest notification after 2 seconds
+  useEffect(() => {
+    if (!ingestMsg) return
+    const timer = setTimeout(() => setIngestMsg(null), 2000)
+    return () => clearTimeout(timer)
+  }, [ingestMsg])
 
   // Drag and drop event handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
