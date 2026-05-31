@@ -297,9 +297,15 @@ export function DashboardOverviewPage() {
     setIngestMsg(null)
     try {
       const res = await triggerIngest()
-      setIngestMsg(res.message)
+      if (res && res.status === 'queued') {
+        setIngestMsg(
+          'Asynchronous ingestion is now running in the background. Chunks are being extracted, embedded via OpenAI, and structural entities indexed in Neo4j. Refresh in a few moments to see the new metrics!'
+        )
+      } else {
+        setIngestMsg(res.message || 'Ingestion task successfully scheduled!')
+      }
     } catch (e) {
-      setIngestMsg(e instanceof Error ? e.message : 'Ingest failed')
+      setIngestMsg(e instanceof Error ? e.message : 'Ingestion failed')
     } finally {
       setIngesting(false)
     }
@@ -694,8 +700,28 @@ export function DashboardOverviewPage() {
       ) : null}
 
       {ingestMsg ? (
-        <div className="card card-pad mb-3" style={{ fontSize: 13 }}>
-          {ingestMsg}
+        <div 
+          className="card card-pad mb-3" 
+          style={{ 
+            fontSize: '13px', 
+            background: 'var(--success-bg)', 
+            color: 'var(--success)', 
+            border: '1px solid var(--success)', 
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px',
+            boxShadow: 'var(--shadow-sm)',
+            fontWeight: 500
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>🚀</span>
+          <div>
+            <strong>Ingestion Scheduled Successfully</strong>
+            <p style={{ margin: '2px 0 0', fontSize: '12.5px', opacity: 0.95, fontWeight: 400, color: 'var(--text-2)' }}>
+              {ingestMsg}
+            </p>
+          </div>
         </div>
       ) : null}
 
