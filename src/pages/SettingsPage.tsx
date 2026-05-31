@@ -4,7 +4,15 @@ import { ZoomIn, ZoomOut, X } from 'lucide-react'
 import { Icons } from '@/components/icons'
 import { PasswordField } from '@/components/auth/PasswordField'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { changePassword, resendVerification, uploadAvatar, updateUser } from '@/lib/api'
+import {
+  changePassword,
+  resendVerification,
+  uploadAvatar,
+  updateUser,
+  getAgentSettings,
+  updateAgentSettings,
+  type AgentSettings,
+} from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 import { formatDate } from '@/lib/format'
 
@@ -255,6 +263,40 @@ export function SettingsPage() {
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null)
   const [verifyToken, setVerifyToken] = useState<string | null>(null)
   const [verifyLoading, setVerifyLoading] = useState(false)
+
+  // ── Assistant configuration (admin only) ──
+  const isAdmin = !!user?.roles?.includes('admin')
+  const [agent, setAgent] = useState<AgentSettings | null>(null)
+  const [agentLoading, setAgentLoading] = useState(false)
+  const [agentSaving, setAgentSaving] = useState(false)
+  const [agentMsg, setAgentMsg] = useState<string | null>(null)
+  const [agentErr, setAgentErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isAdmin) return
+    setAgentLoading(true)
+    getAgentSettings()
+      .then(setAgent)
+      .catch((e) => setAgentErr(e instanceof Error ? e.message : 'Failed to load settings'))
+      .finally(() => setAgentLoading(false))
+  }, [isAdmin])
+
+  const handleSaveAgent = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!agent) return
+    setAgentSaving(true)
+    setAgentMsg(null)
+    setAgentErr(null)
+    try {
+      const saved = await updateAgentSettings(agent)
+      setAgent(saved)
+      setAgentMsg('Assistant settings saved. New chats use them immediately.')
+    } catch (e) {
+      setAgentErr(e instanceof Error ? e.message : 'Failed to save settings')
+    } finally {
+      setAgentSaving(false)
+    }
+  }
 
   async function handleChangePassword(e: FormEvent) {
     e.preventDefault()
@@ -549,6 +591,121 @@ export function SettingsPage() {
         </div>
 
       </div>
+
+      {/* Assistant configuration — admin only */}
+      {isAdmin ? (
+        <section className="card card-pad" style={{ marginTop: 20 }}>
+          <div className="row-between mb-3">
+            <span className="h-card">Assistant configuration</span>
+            <span className="muted" style={{ fontSize: 12 }}>
+              Controls the AI system prompt, identity, and answer scope
+            </span>
+          </div>
+
+          {agentLoading || !agent ? (
+            <p className="empty">Loading assistant settings…</p>
+          ) : (
+            <form onSubmit={handleSaveAgent} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {agentErr ? (
+                <div className="creds__alert" role="alert">{agentErr}</div>
+              ) : null}
+              {agentMsg ? (
+                <div className="card card-pad" style={{ fontSize: 13, background: 'var(--success-bg)', borderColor: 'var(--success)', color: 'var(--success)' }}>
+                  {agentMsg}
+                </div>
+              ) : null}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label htmlFor="assistant-name" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Assistant name</label>
+                  <input
+                    id="assistant-name"
+                    className="input"
+                    value={agent.assistant_name}
+                    maxLength={120}
+                    onChange={(e) => setAgent({ ...agent, assistant_name: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end' }}>
+                  <label style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Restrict to scope</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, height: 38 }}>
+                    <input
+                      type="checkbox"
+                      checked={agent.enforce_scope}
+                      onChange={(e) => setAgent({ ...agent, enforce_scope: e.target.checked })}
+                    />
+                    {agent.enforce_scope
+                      ? 'On — refuse off-topic questions'
+                      : 'Off — answer anything the prompt allows'}
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label htmlFor="system-prompt" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>System prompt</label>
+                <textarea
+                  id="system-prompt"
+                  className="input"
+                  value={agent.system_prompt}
+                  rows={12}
+                  maxLength={20000}
+                  onChange={(e) => setAgent({ ...agent, system_prompt: e.target.value })}
+                  style={{ fontFamily: 'var(--mono)', fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
+                />
+                <span className="muted" style={{ fontSize: 11 }}>
+                  Defines the assistant's persona, rules, grounding, and reply language.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label htmlFor="scope-desc" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Scope description</label>
+                <textarea
+                  id="scope-desc"
+                  className="input"
+                  value={agent.scope_description}
+                  rows={3}
+                  maxLength={4000}
+                  onChange={(e) => setAgent({ ...agent, scope_description: e.target.value })}
+                  style={{ fontSize: 13, lineHeight: 1.5, resize: 'vertical' }}
+                  disabled={!agent.enforce_scope}
+                />
+                <span className="muted" style={{ fontSize: 11 }}>
+                  Topics the assistant is allowed to answer (used by the off-topic filter).
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label htmlFor="oos-msg" style={{ fontSize: 12, fontWeight: 650, color: 'var(--text-3)' }}>Off-topic refusal message</label>
+                <textarea
+                  id="oos-msg"
+                  className="input"
+                  value={agent.out_of_scope_message}
+                  rows={2}
+                  maxLength={2000}
+                  onChange={(e) => setAgent({ ...agent, out_of_scope_message: e.target.value })}
+                  style={{ fontSize: 13, lineHeight: 1.5, resize: 'vertical' }}
+                  disabled={!agent.enforce_scope}
+                />
+              </div>
+
+              <div className="row gap-12" style={{ alignItems: 'center' }}>
+                <button type="submit" className="btn btn-accent btn-sm" disabled={agentSaving}>
+                  {agentSaving ? 'Saving…' : 'Save assistant settings'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={agentSaving}
+                  onClick={() => { setAgentMsg(null); setAgentErr(null); void getAgentSettings().then(setAgent) }}
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+      ) : null}
 
       {selectedImageSrc && (
         <div 

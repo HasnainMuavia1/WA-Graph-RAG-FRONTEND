@@ -380,3 +380,30 @@ export type DashboardStats = {
 export async function getDashboardStats(): Promise<DashboardStats> {
   return apiFetch<DashboardStats>('/api/v1/dashboard/stats', { auth: true })
 }
+
+// ── Agent settings (editable system prompt / scope) ───────────────────────────
+
+export type AgentSettings = {
+  assistant_name: string
+  system_prompt: string
+  scope_description: string
+  enforce_scope: boolean
+  out_of_scope_message: string
+}
+
+export async function getAgentSettings(): Promise<AgentSettings> {
+  const res = await apiFetch<{ settings: AgentSettings }>('/api/v1/settings/agent', {
+    auth: true,
+  })
+  return res.settings
+}
+
+export async function updateAgentSettings(
+  body: Partial<AgentSettings>,
+): Promise<AgentSettings> {
+  const res = await apiFetch<{ status: string; settings: AgentSettings }>(
+    '/api/v1/settings/agent',
+    { method: 'PUT', auth: true, body: JSON.stringify(body) },
+  )
+  return res.settings
+}
