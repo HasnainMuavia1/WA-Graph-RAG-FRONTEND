@@ -2073,3 +2073,282 @@ table.tbl tbody tr.clickable-row:hover {
   cursor: not-allowed;
 }
 
+
+/* ============================================================================
+   Login screen — centered, dark, animated starfield (auth/branding only)
+   ========================================================================== */
+
+.login-screen {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+  background: #000000;
+  isolation: isolate;
+}
+
+/* Parallax star layers (CSS-only: tiled radial-gradient dots) */
+.login-stars {
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-stars--far {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 120px 80px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 200px 160px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 90px 200px, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 260px 40px, rgba(255, 255, 255, 0.55), transparent);
+  background-size: 300px 300px;
+  animation: login-drift 220s linear infinite;
+  opacity: 0.6;
+}
+
+.login-stars--mid {
+  background-image:
+    radial-gradient(1.5px 1.5px at 40px 60px, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 180px 120px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 280px 220px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 110px 260px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 330px 90px, rgba(255, 255, 255, 0.75), transparent);
+  background-size: 380px 380px;
+  animation:
+    login-drift 150s linear infinite,
+    login-twinkle 6s ease-in-out infinite alternate;
+  opacity: 0.8;
+}
+
+.login-stars--near {
+  background-image:
+    radial-gradient(2px 2px at 60px 50px, #ffffff, transparent),
+    radial-gradient(2px 2px at 220px 140px, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(2px 2px at 140px 240px, #ffffff, transparent),
+    radial-gradient(2px 2px at 300px 70px, rgba(255, 255, 255, 0.9), transparent);
+  background-size: 320px 320px;
+  animation:
+    login-drift 95s linear infinite,
+    login-twinkle 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes login-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -600px, 0);
+  }
+}
+
+@keyframes login-twinkle {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-stars {
+    animation: none !important;
+  }
+}
+
+/* Centered column — no container/card, sits directly on the black background */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  padding: 24px;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: 34px;
+}
+
+.login-brand__logo {
+  width: 108px;
+  height: 108px;
+  object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+}
+
+.login-brand__title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+.login-brand__subtitle {
+  margin: 0;
+  font-size: 15.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-field__labelrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.login-field label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.login-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px 0 42px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 15px;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.login-input--pw {
+  padding-right: 48px;
+}
+
+.login-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.login-input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.login-eye {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.login-eye:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.login-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+.login-hint {
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-alert {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #ffd7d7;
+  background: rgba(220, 38, 38, 0.16);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.login-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 54px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    filter 0.18s ease,
+    transform 0.05s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.login-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

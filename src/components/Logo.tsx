@@ -14,7 +14,7 @@ type LogoProps = {
  * logo on the light theme so it stays legible against the surface behind it.
  * Pass `variant` to override (e.g. the always-dark auth brand pane).
  */
-export function Logo({ size = 20, className, variant }: LogoProps) {
+export function Logo({ size = 30, className, variant }: LogoProps) {
   const { theme } = useTheme()
   const useWhite = variant ? variant === 'white' : theme === 'dark'
   const src = useWhite ? whiteLogo : blackLogo
